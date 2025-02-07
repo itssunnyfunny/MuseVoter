@@ -1,7 +1,8 @@
+import { prismaClient } from "@/app/lib/db"
 import NextAuth from "next-auth"
 import GithubProvider from "next-auth/providers/github"
-import Google from "next-auth/providers/google"
-export const authOptions = {
+import GoogleProvider from "next-auth/providers/google"
+ const handler = NextAuth( {
   // Configure one or more authentication providers
   providers: [
     GithubProvider({
@@ -10,5 +11,26 @@ export const authOptions = {
     }),
     // ...add more providers here
   ],
-}
-export default NextAuth(authOptions)
+  callbacks: {
+   async signIn(params) {
+        if (!params.user.email) {
+          return false
+        }
+       try {
+        await prismaClient.user.create({
+          data: {
+            email: params.user?.email,
+            provider: "Google"
+          }
+        })
+      
+       } catch (error) {
+         return false
+       }
+       return true
+    }
+  }
+
+})
+
+export {handler as GET , handler as POST}
